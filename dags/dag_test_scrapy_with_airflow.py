@@ -3,7 +3,6 @@ import logging
 from scrapy.crawler import CrawlerRunner
 from twisted.internet import reactor
 
-
 import pendulum
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -22,8 +21,8 @@ with DAG(
 
     def call_scraper_my_language_exchange():
         settings = {
-            'FEED_FORMAT': 'csv',
-            'FEED_URI': 'logs/tmp/my_language_exchange.csv'
+            "FEED_FORMAT": "csv",
+            "FEED_URI": "logs/tmp/my_language_exchange.csv",
         }
 
         logger.info("Logging with logger1: started...")
