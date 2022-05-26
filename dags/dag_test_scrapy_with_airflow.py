@@ -50,20 +50,21 @@ with DAG(
         python_callable=test_network,
     )
 
-    PostgresOperator(
-        task_id="test_postgresql_query",
-        sql="""
-        DROP TABLE IF EXISTS staging_table;
-        CREATE TABLE IF NOT EXISTS staging_table (city VARCHAR,
-                                                  country VARCHAR,
-                                                  description VARCHAR,
-                                                  image_url VARCHAR,
-                                                  last_login DATE,
-                                                  name VARCHAR,
-                                                  native_language VARCHAR,
-                                                  practicing_language VARCHAR,
-                                                  user_id BIGINT);
-        COPY staging_table FROM '/Users/wctjerry/Airflow/logs/tmp/my_language_exchange.csv' DELIMITER ',' CSV HEADER;
-        """,
-        postgres_conn_id="local_udemy",
+    create_staging = PostgresOperator(
+        task_id="create_staging_my_language_exchange",
+        sql="sql/language_exchange/create_staging_my_language_exchange.sql",
+        params={"tb_name": "staging_my_launguage_exchange"},
+        postgres_conn_id="language_exchange_conn",
     )
+
+    load_staging = PostgresOperator(
+        task_id="load_staging_my_language_exchange",
+        sql="sql/language_exchange/load_staging.sql",
+        params={
+            "tb_name": "staging_my_launguage_exchange",
+            "source_path": "/Users/wctjerry/Airflow/logs/tmp/my_language_exchange.csv"
+        },
+        postgres_conn_id="language_exchange_conn",
+    )
+
+    create_staging >> load_staging

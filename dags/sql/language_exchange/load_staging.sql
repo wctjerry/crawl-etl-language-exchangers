@@ -1,0 +1,1 @@
+COPY {{ params.tb_name }} FROM '{{ params.source_path }}' DELIMITER ',' CSV HEADER;
