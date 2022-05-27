@@ -16,6 +16,7 @@ with DAG(
     schedule_interval="@weekly",
     start_date=pendulum.datetime(2022, 4, 28, tz="UTC"),
     catchup=False,
+    template_searchpath=["dags/sql/language_exchange"],
     tags=["scrapy"],
 ) as dag:
 
@@ -52,17 +53,17 @@ with DAG(
 
     create_staging = PostgresOperator(
         task_id="create_staging_my_language_exchange",
-        sql="sql/language_exchange/create_staging_my_language_exchange.sql",
+        sql="create_staging_my_language_exchange.sql",
         params={"tb_name": "staging_my_launguage_exchange"},
         postgres_conn_id="language_exchange_conn",
     )
 
     load_staging = PostgresOperator(
         task_id="load_staging_my_language_exchange",
-        sql="sql/language_exchange/load_staging.sql",
+        sql="load_staging.sql",
         params={
             "tb_name": "staging_my_launguage_exchange",
-            "source_path": "/Users/wctjerry/Airflow/logs/tmp/my_language_exchange.csv"
+            "source_path": "/Users/wctjerry/Airflow/logs/tmp/my_language_exchange.csv",
         },
         postgres_conn_id="language_exchange_conn",
     )
