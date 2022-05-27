@@ -1,14 +1,15 @@
 import logging
 import os
 
-import constants as c
 from scrapy.crawler import CrawlerRunner
 from twisted.internet import reactor
 
+import constants as c
 import pendulum
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
+from operators.spider_operator import SpiderOperator
 from scrapy_utils.spiders.mylanguageexchange import MyLanguageExchangeSpider
 
 logger = logging.getLogger("airflow.task")
@@ -32,25 +33,6 @@ with DAG(
     tags=["scrapy"],
 ) as dag:
 
-    def call_scraper_my_language_exchange():
-        settings = {
-            "FEED_FORMAT": "csv",
-            "FEED_URI": SCRAPED_FILE_PATH,
-        }
-
-        logger.info("Logging with logger1: started...")
-        runner = CrawlerRunner(settings)
-
-        d = runner.crawl(MyLanguageExchangeSpider)
-        d.addBoth(lambda _: reactor.stop())
-        reactor.run()
-        logger.info("Logging with logger1: ended...")
-
-    PythonOperator(
-        task_id="scrape_language_exchange_task",
-        python_callable=call_scraper_my_language_exchange,
-    )
-
     def test_network():
         import requests
 
@@ -61,6 +43,15 @@ with DAG(
     PythonOperator(
         task_id="test_network_task",
         python_callable=test_network,
+    )
+
+    scrape_data_task = SpiderOperator(
+        task_id="scrape_operator_language_exchange_task",
+        spider=MyLanguageExchangeSpider,
+        setting={
+            "FEED_FORMAT": "csv",
+            "FEED_URI": SCRAPED_FILE_PATH,
+        },
     )
 
     create_staging = PostgresOperator(
@@ -80,4 +71,4 @@ with DAG(
         postgres_conn_id="language_exchange_conn",
     )
 
-    create_staging >> load_staging
+    scrape_data_task >> create_staging >> load_staging
