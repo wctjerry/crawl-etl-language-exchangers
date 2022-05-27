@@ -1,5 +1,7 @@
 import logging
+import os
 
+import constants as c
 from scrapy.crawler import CrawlerRunner
 from twisted.internet import reactor
 
@@ -10,6 +12,16 @@ from airflow.providers.postgres.operators.postgres import PostgresOperator
 from scrapy_utils.spiders.mylanguageexchange import MyLanguageExchangeSpider
 
 logger = logging.getLogger("airflow.task")
+
+SCRAPED_FILE_PATH = os.path.join(
+    c.TMP_FILE_PATH,
+    "my_language_exchange.csv",
+)
+
+ABS_SCRAPED_FILE_PATH = os.path.join(
+    c.ABS_ROOT_PATH,
+    SCRAPED_FILE_PATH,
+)
 
 with DAG(
     dag_id="test_scrapy_operator",
@@ -23,7 +35,7 @@ with DAG(
     def call_scraper_my_language_exchange():
         settings = {
             "FEED_FORMAT": "csv",
-            "FEED_URI": "logs/tmp/my_language_exchange.csv",
+            "FEED_URI": SCRAPED_FILE_PATH,
         }
 
         logger.info("Logging with logger1: started...")
@@ -63,7 +75,7 @@ with DAG(
         sql="load_staging.sql",
         params={
             "tb_name": "staging_my_launguage_exchange",
-            "source_path": "/Users/wctjerry/Airflow/logs/tmp/my_language_exchange.csv",
+            "source_path": ABS_SCRAPED_FILE_PATH,
         },
         postgres_conn_id="language_exchange_conn",
     )
