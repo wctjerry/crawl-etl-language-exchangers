@@ -1,1 +1,1 @@
-COPY {{ params.tb_name }} FROM '{{ params.source_path }}' DELIMITER ',' CSV HEADER;
+COPY {{ params.tb_name }} FROM PROGRAM 'gzip -dc {{ params.source_path }}' DELIMITER ',' CSV HEADER;

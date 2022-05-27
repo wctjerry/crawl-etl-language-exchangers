@@ -16,7 +16,7 @@ logger = logging.getLogger("airflow.task")
 
 SCRAPED_FILE_PATH = os.path.join(
     c.TMP_FILE_PATH,
-    "my_language_exchange.csv",
+    "my_language_exchange.csv.gz",
 )
 
 ABS_SCRAPED_FILE_PATH = os.path.join(
@@ -49,8 +49,15 @@ with DAG(
         task_id="scrape_operator_language_exchange_task",
         spider=MyLanguageExchangeSpider,
         setting={
-            "FEED_FORMAT": "csv",
-            "FEED_URI": SCRAPED_FILE_PATH,
+            "FEEDS": {
+                SCRAPED_FILE_PATH: {
+                    "format": "csv",
+                    "postprocessing": [
+                        "scrapy.extensions.postprocessing.GzipPlugin",
+                    ],
+                    "overwrite": True,
+                }
+            },
         },
     )
 
