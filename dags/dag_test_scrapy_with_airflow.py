@@ -58,6 +58,8 @@ with DAG(
                     "overwrite": True,
                 }
             },
+            "DOWNLOAD_DELAY": 2,
+            "RANDOMIZE_DOWNLOAD_DELAY": True,
         },
     )
 

@@ -1,5 +1,4 @@
 import logging
-
 import scrapy
 
 from scrapy_utils.items import MyLanguageExchangeItem
@@ -56,7 +55,7 @@ class MyLanguageExchangeSpider(scrapy.Spider):
             sort_dict[k] = v
 
         sort_login = sort_dict["Login Date"]
-        logger.info("Parsing search options finished...")
+        logger.info(f"Parsing search options finished, total {len(country_dict)} pair(s)...")
 
         for k, v in country_dict.items():
             if k == "- All -":
@@ -64,7 +63,6 @@ class MyLanguageExchangeSpider(scrapy.Spider):
 
             url = f"https://www.mylanguageexchange.com/search.asp?selX3=null&selX6=null&selCountry={v}&txtCity=&txtAgeMin=&txtAgeMax=&selGender=null&selIsClass=null&selX4=null&selTxtChat=null&selX13=null&selFace=null&txtFName=&txtDesc=&selOrder={sort_login}&txtSrchName=&nRows={rows_per_page}&BtnSubSrch=Search"
             yield scrapy.Request(url=url, callback=self.parse_search_results)
-            break  ## TODO: remove after testing
 
     def parse_search_results(self, response):
         """Parse user data returned in the search results.
