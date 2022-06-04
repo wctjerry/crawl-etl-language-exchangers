@@ -74,10 +74,21 @@ with DAG(
         task_id="load_staging_my_language_exchange",
         sql="load_staging.sql",
         params={
-            "tb_name": "staging_my_launguage_exchange",
             "source_path": ABS_SCRAPED_FILE_PATH,
         },
         postgres_conn_id="language_exchange_conn",
     )
 
-    scrape_data_task >> create_staging >> load_staging
+    etl_dim_users = PostgresOperator(
+        task_id="ETL_dim_users",
+        sql="etl_dim_mle_users.sql",
+        postgres_conn_id="language_exchange_conn",
+    )
+
+    etl_fct_user_login = PostgresOperator(
+        task_id="ETL_fct_user_login",
+        sql="etl_fct_login.sql",
+        postgres_conn_id="language_exchange_conn",
+    )
+
+    scrape_data_task >> create_staging >> load_staging >> etl_dim_users >> etl_fct_user_login
