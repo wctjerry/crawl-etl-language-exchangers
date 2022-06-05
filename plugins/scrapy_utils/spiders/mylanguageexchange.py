@@ -1,4 +1,6 @@
 import logging
+from urllib import parse
+
 import scrapy
 
 from scrapy_utils.items import MyLanguageExchangeItem
@@ -46,6 +48,12 @@ class MyLanguageExchangeSpider(scrapy.Spider):
             k = country.xpath("text()").extract_first()
             country_dict[k] = v
 
+        reversed_country_dict = {
+            int(v): k
+            for k, v in country_dict.items()
+            if v != "null"
+        }
+
         sort_dict = {}
         sorts = response.xpath("//select[contains(@name, 'selOrder')]/option")
 
@@ -62,7 +70,13 @@ class MyLanguageExchangeSpider(scrapy.Spider):
                 continue
 
             url = f"https://www.mylanguageexchange.com/search.asp?selX3=null&selX6=null&selCountry={v}&txtCity=&txtAgeMin=&txtAgeMax=&selGender=null&selIsClass=null&selX4=null&selTxtChat=null&selX13=null&selFace=null&txtFName=&txtDesc=&selOrder={sort_login}&txtSrchName=&nRows={rows_per_page}&BtnSubSrch=Search"
-            yield scrapy.Request(url=url, callback=self.parse_search_results)
+            yield scrapy.Request(
+                url=url,
+                callback=self.parse_search_results,
+                meta={
+                    "reversed_country_dict": reversed_country_dict,
+                }
+            )
 
     def parse_search_results(self, response):
         """Parse user data returned in the search results.
@@ -73,6 +87,15 @@ class MyLanguageExchangeSpider(scrapy.Spider):
         Yields:
             scrapy.Item: a single user's scraped data
         """
+        reversed_country_dict = response.meta["reversed_country_dict"]
+
+        url = response.url
+        parameters = parse.parse_qs(parse.urlsplit(url).query)
+        country = reversed_country_dict.get(int(parameters.get("selCountry", "undefined")[0]), "undefined")
+        page = parameters.get("Cnt", [1])[0]
+        nrows = parameters.get("nRows", ["undefined"])[0]
+        logger.info(f"Scraping country {country} at page {page} with {nrows} rows...")
+
         rows = response.xpath("//table[contains(@class, 'TblSrchResults')]/tr")
 
         for row in rows:
