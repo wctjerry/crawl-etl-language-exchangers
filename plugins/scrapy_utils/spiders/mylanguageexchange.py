@@ -1,6 +1,8 @@
 import logging
+from datetime import datetime, timedelta, timezone
 from urllib import parse
 
+import pytz
 import scrapy
 
 from scrapy_utils.items import MyLanguageExchangeItem
@@ -49,9 +51,7 @@ class MyLanguageExchangeSpider(scrapy.Spider):
             country_dict[k] = v
 
         reversed_country_dict = {
-            int(v): k
-            for k, v in country_dict.items()
-            if v != "null"
+            int(v): k for k, v in country_dict.items() if v != "null"
         }
 
         sort_dict = {}
@@ -63,7 +63,9 @@ class MyLanguageExchangeSpider(scrapy.Spider):
             sort_dict[k] = v
 
         sort_login = sort_dict["Login Date"]
-        logger.info(f"Parsing search options finished, total {len(country_dict)} pair(s)...")
+        logger.info(
+            f"Parsing search options finished, total {len(country_dict)} pair(s)..."
+        )
 
         for k, v in country_dict.items():
             if k == "- All -":
@@ -75,7 +77,7 @@ class MyLanguageExchangeSpider(scrapy.Spider):
                 callback=self.parse_search_results,
                 meta={
                     "reversed_country_dict": reversed_country_dict,
-                }
+                },
             )
 
     def parse_search_results(self, response):
@@ -91,7 +93,9 @@ class MyLanguageExchangeSpider(scrapy.Spider):
 
         url = response.url
         parameters = parse.parse_qs(parse.urlsplit(url).query)
-        country = reversed_country_dict.get(int(parameters.get("selCountry", "undefined")[0]), "undefined")
+        country = reversed_country_dict.get(
+            int(parameters.get("selCountry", "undefined")[0]), "undefined"
+        )
         page = parameters.get("Cnt", [1])[0]
         nrows = parameters.get("nRows", ["undefined"])[0]
         logger.info(f"Scraping country {country} at page {page} with {nrows} rows...")
@@ -143,7 +147,28 @@ class MyLanguageExchangeSpider(scrapy.Spider):
 
             yield item
 
-        navigations = response.xpath(
-            ".//a[contains(@class, 'PageArrow')]/@href"
-        ).extract()
-        # yield response.follow(navigations[-1], callback=self.parse_search_results) # TODO: remove after testing
+        oldest_last_login_dt = datetime.strptime(item["last_login"], "%B %d, %Y").date()
+
+        if oldest_last_login_dt < self.get_target_date():
+            logger.info(
+                f"Stop scraping {country} because {item['last_login']} exceeds cutoff date"
+            )
+        else:
+            navigations = response.xpath(
+                ".//a[contains(@class, 'PageArrow')]/@href"
+            ).extract()
+            yield response.follow(
+                navigations[-1],
+                callback=self.parse_search_results,
+                meta={
+                    "reversed_country_dict": reversed_country_dict,
+                },
+            )
+
+    def get_target_date(self):
+        tz = pytz.timezone("Asia/Shanghai")
+        utc_now = datetime.now(timezone.utc)
+        local_now = utc_now.astimezone(tz)
+        target_date = local_now.date() - timedelta(days=1)  # previous day
+
+        return target_date
