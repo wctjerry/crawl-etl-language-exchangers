@@ -149,9 +149,10 @@ class MyLanguageExchangeSpider(scrapy.Spider):
 
         oldest_last_login_dt = datetime.strptime(item["last_login"], "%B %d, %Y").date()
 
-        if oldest_last_login_dt < self.get_target_date():
+        target_date = self.get_target_date()
+        if oldest_last_login_dt < target_date:
             logger.info(
-                f"Stop scraping {country} because {item['last_login']} exceeds cutoff date"
+                f"Stop scraping {country} because {item['last_login']} exceeds cutoff date {target_date.strftime('%B %d, %Y')}"
             )
         else:
             navigations = response.xpath(
