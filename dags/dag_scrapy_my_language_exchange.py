@@ -5,7 +5,6 @@ import pendulum
 
 import constants as c
 from airflow import DAG
-from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from operators.spider_operator import SpiderOperator
 from scrapy_utils.spiders.mylanguageexchange import MyLanguageExchangeSpider

@@ -18,7 +18,7 @@ SELECT user_id,
 
 FROM staging_my_launguage_exchange
 
-WHERE last_login = '{{ ds }}'
+WHERE last_login = '{{ macros.ds_add(data_interval_start.in_timezone("Asia/Shanghai").to_date_string(), -1) }}'
 
 ON CONFLICT (id) DO UPDATE SET
     name = excluded.name,

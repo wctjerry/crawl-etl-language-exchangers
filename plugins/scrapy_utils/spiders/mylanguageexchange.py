@@ -170,6 +170,6 @@ class MyLanguageExchangeSpider(scrapy.Spider):
         tz = pytz.timezone("Asia/Shanghai")
         utc_now = datetime.now(timezone.utc)
         local_now = utc_now.astimezone(tz)
-        target_date = local_now.date() - timedelta(days=1)  # previous day
+        target_date = local_now.date() - timedelta(days=2)  # to avoid time zone difference
 
         return target_date
