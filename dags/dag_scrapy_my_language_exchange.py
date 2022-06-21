@@ -2,6 +2,7 @@ import logging
 import os
 
 import pendulum
+from datetime import timedelta
 
 import constants as c
 from airflow import DAG
@@ -23,6 +24,10 @@ ABS_SCRAPED_FILE_PATH = os.path.join(
 
 with DAG(
     dag_id="scrapy_my_language_exchange",
+    default_args={
+        'retries': 3,
+        'retry_delay': timedelta(minutes=5),
+    },
     schedule_interval="@daily",
     start_date=pendulum.datetime(2022, 6, 20, tz="Asia/Shanghai"),
     catchup=False,
