@@ -23,12 +23,12 @@ ABS_SCRAPED_FILE_PATH = os.path.join(
 )
 
 with DAG(
-    dag_id="scrapy_my_language_exchange",
+    dag_id="scrapy_my_language_exchange_v3",
     default_args={
         'retries': 3,
         'retry_delay': timedelta(minutes=5),
     },
-    schedule_interval="@daily",
+    schedule_interval="0 9 * * *",
     start_date=pendulum.datetime(2022, 6, 20, tz="Asia/Shanghai"),
     catchup=False,
     template_searchpath=["dags/sql/language_exchange"],
