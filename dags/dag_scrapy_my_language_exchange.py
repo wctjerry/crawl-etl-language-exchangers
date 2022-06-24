@@ -55,7 +55,7 @@ with DAG(
 
     create_staging = PostgresOperator(
         task_id="create_staging_my_language_exchange",
-        sql="create_staging_my_language_exchange.sql",
+        sql="create_staging_mle.sql",
         params={"tb_name": "staging_my_launguage_exchange"},
         postgres_conn_id="language_exchange_conn",
     )
