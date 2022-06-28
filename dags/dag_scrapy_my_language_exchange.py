@@ -69,6 +69,12 @@ with DAG(
         postgres_conn_id="language_exchange_conn",
     )
 
+    etl_staging_dim_users = PostgresOperator(
+        task_id="ETL_staging_dim_users",
+        sql="create_staging_dim_mle_users.sql",
+        postgres_conn_id="language_exchange_conn",
+    )
+
     etl_dim_users = PostgresOperator(
         task_id="ETL_dim_users",
         sql="etl_dim_mle_users.sql",
@@ -85,6 +91,7 @@ with DAG(
         scrape_data_task
         >> create_staging
         >> load_staging
+        >> etl_staging_dim_users
         >> etl_dim_users
         >> etl_fct_user_login
     )
