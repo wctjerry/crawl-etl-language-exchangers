@@ -20,6 +20,6 @@ WHERE s.last_login = '{{ macros.ds_add(data_interval_start.in_timezone("Asia/Sha
             AND u.country = s.country
             AND u.native_language = s.native_language
             AND u.practicing_language = s.practicing_language
-            AND u.is_current = True
-            AND u.effective_date <= '{{ macros.ds_add(data_interval_start.in_timezone("Asia/Shanghai").to_date_string(), -2) }}'::DATE -- For idempotency
+            AND '{{ macros.ds_add(data_interval_start.in_timezone("Asia/Shanghai").to_date_string(), -2) }}'::DATE -- For idempotency
+                BETWEEN u.effective_date AND u.expiration_date
 );
