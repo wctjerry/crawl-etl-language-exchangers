@@ -25,8 +25,8 @@ ABS_SCRAPED_FILE_PATH = os.path.join(
 with DAG(
     dag_id="scrapy_my_language_exchange_v3",
     default_args={
-        'retries': 3,
-        'retry_delay': timedelta(minutes=5),
+        "retries": 3,
+        "retry_delay": timedelta(minutes=5),
     },
     schedule_interval="0 9 * * *",
     start_date=pendulum.datetime(2022, 6, 20, tz="Asia/Shanghai"),
@@ -53,17 +53,11 @@ with DAG(
         },
     )
 
-    create_staging = PostgresOperator(
-        task_id="create_staging_my_language_exchange",
-        sql="create_staging_mle.sql",
-        params={"tb_name": "staging_my_launguage_exchange"},
-        postgres_conn_id="language_exchange_conn",
-    )
-
-    load_staging = PostgresOperator(
-        task_id="load_staging_my_language_exchange",
-        sql="load_staging.sql",
+    create_load_staging = PostgresOperator(
+        task_id="create_load_staging_my_language_exchange",
+        sql="create_and_load_staging.sql",
         params={
+            "tb_name": "staging_my_launguage_exchange",
             "source_path": ABS_SCRAPED_FILE_PATH,
         },
         postgres_conn_id="language_exchange_conn",
@@ -89,8 +83,7 @@ with DAG(
 
     (
         scrape_data_task
-        >> create_staging
-        >> load_staging
+        >> create_load_staging
         >> etl_staging_dim_users
         >> etl_dim_users
         >> etl_fct_user_login
