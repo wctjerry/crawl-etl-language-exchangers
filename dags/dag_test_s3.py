@@ -5,6 +5,7 @@ import constants as c
 from airflow.hooks.S3_hook import S3Hook
 from airflow.models import DAG
 from airflow.operators.python import PythonOperator
+from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
 
 FILE_PATH = os.path.join(
     c.TMP_FILE_PATH,
@@ -14,20 +15,21 @@ FILE_PATH = os.path.join(
 
 def upload_to_s3(file_name, key, bucket_name):
     hook = S3Hook("s3_conn")
-    is_exist = hook.check_for_key(
-        key=key,
-        bucket_name=bucket_name,
-    )
-    if is_exist:
-        hook.delete_objects(
-            bucket=bucket_name,
-            keys=key,
-        )
+    # is_exist = hook.check_for_key(
+    #     key=key,
+    #     bucket_name=bucket_name,
+    # )
+    # if is_exist:
+    #     hook.delete_objects(
+    #         bucket=bucket_name,
+    #         keys=key,
+    #     )
 
     hook.load_file(
         bucket_name=bucket_name,
         key=key,
         filename=file_name,
+        replace=True,
     )
 
 
