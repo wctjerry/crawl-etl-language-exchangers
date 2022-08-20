@@ -2,9 +2,10 @@ import logging
 import os
 from datetime import timedelta
 
-import pendulum
 import constants as c
+import pendulum
 from airflow import DAG
+from airflow.hooks.base import BaseHook
 from airflow.operators.sql import SQLThresholdCheckOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from operators.spider_operator import SpiderOperator
@@ -12,9 +13,13 @@ from scrapy_utils.spiders.mylanguageexchange import MyLanguageExchangeSpider
 
 logger = logging.getLogger("airflow.task")
 
+connection = BaseHook.get_connection("aws_language-exchange_conn")
+
 SCRAPED_FILE_PATH = os.path.join(
-    c.TMP_FILE_PATH,
-    "my_language_exchange.csv.gz",
+    "s3://",
+    c.SCRAPED_DATA_BUCKET,
+    c.SCRAPED_DATA_PATH,
+    "my_language_exchange_%(time)s.csv",
 )
 
 ABS_SCRAPED_FILE_PATH = os.path.join(
@@ -42,14 +47,13 @@ with DAG(
             "FEEDS": {
                 SCRAPED_FILE_PATH: {
                     "format": "csv",
-                    "postprocessing": [
-                        "scrapy.extensions.postprocessing.GzipPlugin",
-                    ],
                     "overwrite": True,
                 }
             },
             "DOWNLOAD_DELAY": 2,
             "RANDOMIZE_DOWNLOAD_DELAY": True,
+            "AWS_ACCESS_KEY_ID": connection.login,
+            "AWS_SECRET_ACCESS_KEY": connection.password,
         },
     )
 
