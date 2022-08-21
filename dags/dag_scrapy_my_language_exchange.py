@@ -5,7 +5,6 @@ from datetime import timedelta
 import constants as c
 import pendulum
 from airflow import DAG
-from airflow.hooks.base import BaseHook
 from airflow.operators.sql import SQLThresholdCheckOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from operators.spider_operator import SpiderOperator
@@ -13,18 +12,16 @@ from scrapy_utils.spiders.mylanguageexchange import MyLanguageExchangeSpider
 
 logger = logging.getLogger("airflow.task")
 
-connection = BaseHook.get_connection("aws_language-exchange_conn")
-
-SCRAPED_FILE_PATH = os.path.join(
+EXPORT_DATA_PATH = os.path.join(
     "s3://",
-    c.SCRAPED_DATA_BUCKET,
-    c.SCRAPED_DATA_PATH,
-    "my_language_exchange_%(time)s.csv",
+    c.EXPORT_DATA_BUCKET,
+    c.EXPORT_DATA_PATH,
+    "my_language_exchange_{{ ds }}.csv",
 )
 
-ABS_SCRAPED_FILE_PATH = os.path.join(
+ABS_EXPORT_FILE_PATH = os.path.join(
     c.ABS_ROOT_PATH,
-    SCRAPED_FILE_PATH,
+    EXPORT_DATA_PATH,
 )
 
 with DAG(
@@ -44,17 +41,11 @@ with DAG(
         task_id="scrape_operator_language_exchange_task",
         spider=MyLanguageExchangeSpider,
         setting={
-            "FEEDS": {
-                SCRAPED_FILE_PATH: {
-                    "format": "csv",
-                    "overwrite": True,
-                }
-            },
             "DOWNLOAD_DELAY": 2,
             "RANDOMIZE_DOWNLOAD_DELAY": True,
-            "AWS_ACCESS_KEY_ID": connection.login,
-            "AWS_SECRET_ACCESS_KEY": connection.password,
         },
+        export_data_path=EXPORT_DATA_PATH,
+        aws_conn_id="aws_language-exchange_conn",
     )
 
     # Extract task
@@ -63,7 +54,7 @@ with DAG(
         sql="create_and_load_staging.sql",
         params={
             "tb_name": "staging_my_launguage_exchange",
-            "source_path": ABS_SCRAPED_FILE_PATH,
+            "source_path": ABS_EXPORT_FILE_PATH,
         },
         postgres_conn_id="language_exchange_conn",
     )
