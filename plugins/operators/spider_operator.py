@@ -2,6 +2,7 @@ import logging
 
 from scrapy.crawler import CrawlerRunner
 from twisted.internet import reactor
+from urllib.parse import urlparse
 
 from airflow.hooks.base import BaseHook
 from airflow.models.baseoperator import BaseOperator
@@ -45,6 +46,10 @@ class SpiderOperator(BaseOperator):
 
         logger.info("Spider closed...")
 
-        export_data_path = list(self.setting.get("FEEDS").keys())[0]
-        self.xcom_push(context, key="s3_uri", value=export_data_path)
-        logger.info(f"S3 URI of the scraped data: {export_data_path}")
+        parsed_url = urlparse(self.export_data_path, allow_fragments=False)
+        bucket = parsed_url.netloc
+        object_name = parsed_url.path
+
+        self.xcom_push(context, key="bucket", value=bucket)
+        self.xcom_push(context, key="object_name", value=object_name)
+        logger.info(f"S3 URI of the scraped data: bucket {bucket}, object name {object_name}")

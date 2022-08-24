@@ -14,7 +14,7 @@ logger = logging.getLogger("airflow.task")
 
 EXPORT_DATA_PATH = os.path.join(
     "s3://",
-    c.EXPORT_DATA_BUCKET,
+    c.S3_BUCKET,
     c.EXPORT_DATA_PATH,
     "my_language_exchange_{{ ds }}.csv",
 )
@@ -55,6 +55,7 @@ with DAG(
         params={
             "tb_name": "staging_my_launguage_exchange",
             "source_path": ABS_EXPORT_FILE_PATH,
+            "bucket_region": c.S3_BUCKET_REGION,
         },
         postgres_conn_id="language_exchange_conn",
     )

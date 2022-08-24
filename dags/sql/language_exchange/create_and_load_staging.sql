@@ -12,4 +12,17 @@ CREATE TABLE IF NOT EXISTS {{ params.tb_name }} (
     user_id BIGINT
 );
 
-COPY staging_my_launguage_exchange FROM PROGRAM 'gzip -dc {{ params.source_path }}' DELIMITER ',' CSV HEADER;
+SELECT aws_s3.table_import_from_s3(
+    '{{ params.tb_name }}',
+    '',
+    '(format csv, HEADER true)',
+    '{{ ti.xcom_pull(
+        task_ids="scrape_operator_language_exchange_task",
+        key="bucket",
+    ) }}',
+    '{{ ti.xcom_pull(
+        task_ids="scrape_operator_language_exchange_task",
+        key="object_name",
+    ) }}',
+    '{{ params.bucket_region }}'
+);
