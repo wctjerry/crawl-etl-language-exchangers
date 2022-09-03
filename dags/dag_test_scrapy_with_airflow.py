@@ -61,6 +61,8 @@ with DAG(
             "DOWNLOAD_DELAY": 2,
             "RANDOMIZE_DOWNLOAD_DELAY": True,
         },
+        export_data_path=SCRAPED_FILE_PATH,
+        aws_conn_id="aws_language-exchange_conn",
     )
 
     create_staging = PostgresOperator(

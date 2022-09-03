@@ -14,7 +14,7 @@ class SpiderOperator(BaseOperator):
     template_fields = ("export_data_path",)
 
     def __init__(
-        self, spider, setting, export_data_path, aws_conn_id, **kwargs
+        self, spider, setting, export_data_path, aws_conn_id="", **kwargs
     ) -> None:
         super().__init__(**kwargs)
         self.spider = spider
